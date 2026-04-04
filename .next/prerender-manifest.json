@@ -1,6 +1,30 @@
 {
   "version": 4,
   "routes": {
+    "/attendance": {
+      "experimentalBypassFor": [
+        {
+          "type": "header",
+          "key": "Next-Action"
+        },
+        {
+          "type": "header",
+          "key": "content-type",
+          "value": "multipart/form-data;.*"
+        }
+      ],
+      "initialRevalidateSeconds": false,
+      "srcRoute": "/attendance",
+      "dataRoute": "/attendance.rsc",
+      "allowHeader": [
+        "host",
+        "x-matched-path",
+        "x-prerender-revalidate",
+        "x-prerender-revalidate-if-generated",
+        "x-next-revalidated-tags",
+        "x-next-revalidate-tag-token"
+      ]
+    },
     "/employees": {
       "experimentalBypassFor": [
         {
@@ -48,37 +72,13 @@
         "x-next-revalidated-tags",
         "x-next-revalidate-tag-token"
       ]
-    },
-    "/attendance": {
-      "experimentalBypassFor": [
-        {
-          "type": "header",
-          "key": "Next-Action"
-        },
-        {
-          "type": "header",
-          "key": "content-type",
-          "value": "multipart/form-data;.*"
-        }
-      ],
-      "initialRevalidateSeconds": false,
-      "srcRoute": "/attendance",
-      "dataRoute": "/attendance.rsc",
-      "allowHeader": [
-        "host",
-        "x-matched-path",
-        "x-prerender-revalidate",
-        "x-prerender-revalidate-if-generated",
-        "x-next-revalidated-tags",
-        "x-next-revalidate-tag-token"
-      ]
     }
   },
   "dynamicRoutes": {},
   "notFoundRoutes": [],
   "preview": {
-    "previewModeId": "69e47ec9da363f7947343a650c188901",
-    "previewModeSigningKey": "c1c8a991bd2f43cb2911eff9777e387580412f507aeaa1cb461d6abd46de0368",
-    "previewModeEncryptionKey": "772019b5189ceaf7d23a3512d39c059bdbb97e6736410f543fb494951257d561"
+    "previewModeId": "c26fa1f1fc7395e7dbed4c7833db5ce6",
+    "previewModeSigningKey": "6a5ed3ff7cc147ae417cb8636f46d67faa3aac48235e130acbb2d38f0df4c86b",
+    "previewModeEncryptionKey": "78365293dbd52f327e4c6a2dd782a6924be03f99674d48304ec9a7d35ab9535c"
   }
 }
