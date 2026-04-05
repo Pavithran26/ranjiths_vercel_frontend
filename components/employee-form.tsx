@@ -2,9 +2,19 @@
 
 import type { FormEvent } from "react";
 
-import type { Employee } from "../lib/api";
-
-export type EmployeeFormValues = Omit<Employee, "id">;
+export type EmployeeFormValues = {
+  employeeCode: string;
+  fullName: string;
+  role: string;
+  department: string;
+  designation: string;
+  phoneNumber: string;
+  email: string;
+  dailyWage: string;
+  joinedOn: string;
+  isActive: string;
+  notes: string;
+};
 
 type EmployeeFormProps = {
   title: string;
@@ -34,7 +44,7 @@ export function EmployeeForm({
           <p className="eyebrow">{eyebrow}</p>
           <h3>{title}</h3>
           <p className="panel-description">
-            These employee details will be reused in attendance today and in work logs, wages, and reports as the ERP grows.
+            These employee details will be reused in work logs, wages, supervisor assignment, and reports as the ERP grows.
           </p>
         </div>
       </div>
@@ -46,9 +56,9 @@ export function EmployeeForm({
           <p>Store one correct record per worker</p>
         </div>
         <div className="insight-card">
-          <span>Attendance link</span>
+          <span>Work log link</span>
           <strong>Ready</strong>
-          <p>Saved employees appear in attendance entry</p>
+          <p>Saved employees appear in the work log assignment flow</p>
         </div>
         <div className="insight-card">
           <span>Future modules</span>
@@ -71,6 +81,14 @@ export function EmployeeForm({
           <input value={form.department} onChange={(event) => onChange("department", event.target.value)} required />
         </label>
         <label>
+          <span>Role</span>
+          <select value={form.role} onChange={(event) => onChange("role", event.target.value)} required>
+            <option value="worker">Worker</option>
+            <option value="supervisor">Supervisor</option>
+            <option value="admin">Admin</option>
+          </select>
+        </label>
+        <label>
           <span>Designation</span>
           <input value={form.designation} onChange={(event) => onChange("designation", event.target.value)} required />
         </label>
@@ -83,8 +101,30 @@ export function EmployeeForm({
           <input value={form.phoneNumber} onChange={(event) => onChange("phoneNumber", event.target.value)} required />
         </label>
         <label>
+          <span>Daily wage</span>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={String(form.dailyWage)}
+            onChange={(event) => onChange("dailyWage", event.target.value)}
+            required
+          />
+        </label>
+        <label>
           <span>Joined date</span>
           <input type="date" value={form.joinedOn} onChange={(event) => onChange("joinedOn", event.target.value)} required />
+        </label>
+        <label>
+          <span>Status</span>
+          <select value={form.isActive} onChange={(event) => onChange("isActive", event.target.value)} required>
+            <option value="true">Active</option>
+            <option value="false">Inactive</option>
+          </select>
+        </label>
+        <label className="form-span-two">
+          <span>Notes</span>
+          <textarea rows={4} value={form.notes} onChange={(event) => onChange("notes", event.target.value)} />
         </label>
 
         {error ? <p className="form-error form-span-two">{error}</p> : null}

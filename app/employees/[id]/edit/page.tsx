@@ -13,11 +13,15 @@ import { useProtectedSession } from "../../../../lib/use-protected-session";
 const initialForm: EmployeeFormValues = {
   employeeCode: "",
   fullName: "",
+  role: "worker",
   department: "",
   designation: "",
   email: "",
   phoneNumber: "",
-  joinedOn: ""
+  dailyWage: "0",
+  joinedOn: "",
+  isActive: "true",
+  notes: ""
 };
 
 export default function EditEmployeePage() {
@@ -40,11 +44,15 @@ export default function EditEmployeePage() {
         setForm({
           employeeCode: employee.employeeCode,
           fullName: employee.fullName,
+          role: employee.role,
           department: employee.department,
           designation: employee.designation,
           email: employee.email,
           phoneNumber: employee.phoneNumber,
-          joinedOn: employee.joinedOn
+          dailyWage: String(employee.dailyWage),
+          joinedOn: employee.joinedOn,
+          isActive: String(employee.isActive),
+          notes: employee.notes
         });
       } catch (error) {
         setPageError(error instanceof Error ? error.message : "Unable to load employee");
@@ -83,7 +91,19 @@ export default function EditEmployeePage() {
     setPageError("");
 
     try {
-      await updateEmployee(session.token, params.id, form);
+      await updateEmployee(session.token, params.id, {
+        employeeCode: form.employeeCode,
+        fullName: form.fullName,
+        role: form.role,
+        department: form.department,
+        designation: form.designation,
+        email: form.email,
+        phoneNumber: form.phoneNumber,
+        dailyWage: Number(form.dailyWage),
+        joinedOn: form.joinedOn,
+        isActive: form.isActive === "true",
+        notes: form.notes
+      });
       startTransition(() => router.replace("/employees"));
     } catch (error) {
       setPageError(error instanceof Error ? error.message : "Unable to update employee");

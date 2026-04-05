@@ -73,7 +73,7 @@ export default function EmployeesPage() {
     <AppShell
       active="employees"
       heading="Employee Master"
-      description="Maintain the field workforce register that powers attendance today and future work logs, wages, and reports."
+      description="Maintain the field workforce register that powers work assignment, wages, supervisors, and profit reporting."
       userName={session.user.name}
       userRole={session.user.role}
       action={
@@ -106,9 +106,14 @@ export default function EmployeesPage() {
             <p>Distinct work groups in the register</p>
           </div>
           <div className="insight-card">
-            <span>Attendance ready</span>
-            <strong>{employees.length > 0 ? "Yes" : "No"}</strong>
-            <p>Employees can be used in daily attendance</p>
+            <span>Supervisors</span>
+            <strong>{employees.filter((employee) => employee.role === "supervisor").length}</strong>
+            <p>Supervisors available for work log assignment</p>
+          </div>
+          <div className="insight-card">
+            <span>Active workers</span>
+            <strong>{employees.filter((employee) => employee.isActive).length}</strong>
+            <p>Employee master is ready for work logs and wages</p>
           </div>
         </div>
 
@@ -131,8 +136,10 @@ export default function EmployeesPage() {
                 <tr>
                   <th>Employee</th>
                   <th>Department</th>
+                  <th>Role</th>
                   <th>Designation</th>
                   <th>Contact</th>
+                  <th>Wage</th>
                   <th>Joined</th>
                   <th>Actions</th>
                 </tr>
@@ -145,11 +152,13 @@ export default function EmployeesPage() {
                       <span>{employee.employeeCode}</span>
                     </td>
                     <td>{employee.department}</td>
+                    <td>{employee.role}</td>
                     <td>{employee.designation}</td>
                     <td>
                       <strong>{employee.email}</strong>
                       <span>{employee.phoneNumber}</span>
                     </td>
+                    <td>Rs {employee.dailyWage.toFixed(0)}</td>
                     <td>{employee.joinedOn}</td>
                     <td>
                       <div className="table-actions">

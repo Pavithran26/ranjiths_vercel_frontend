@@ -1,6 +1,6 @@
 import type { LoginResponse } from "./api";
 
-const STORAGE_KEY = "attendance-admin-session";
+const STORAGE_KEY = "coconut-erp-session";
 
 export const getStoredSession = (): LoginResponse | null => {
   if (typeof window === "undefined") {

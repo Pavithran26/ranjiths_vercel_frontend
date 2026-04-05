@@ -6,7 +6,7 @@ import Link from "next/link";
 import { BrandLogo } from "./brand-logo";
 import { UiIcon, type IconName } from "./ui-icon";
 
-type AppShellSection = "dashboard" | "employees" | "attendance";
+type AppShellSection = "dashboard" | "lands" | "employees" | "vehicles" | "worklogs" | "sales" | "attendance";
 
 type AppShellProps = {
   active: AppShellSection;
@@ -28,15 +28,14 @@ type NavItem = {
 
 const primaryNav: NavItem[] = [
   { key: "dashboard", label: "Dashboard", href: "/dashboard", icon: "dashboard" },
+  { key: "lands", label: "Land Master", href: "/lands", icon: "land" },
   { key: "employees", label: "Employee Master", href: "/employees", icon: "employee" },
-  { key: "attendance", label: "Attendance", href: "/attendance", icon: "attendance" }
+  { key: "vehicles", label: "Vehicle Master", href: "/vehicles", icon: "vehicle" },
+  { key: "worklogs", label: "Work Log Entry", href: "/worklogs", icon: "workflow" },
+  { key: "sales", label: "Sales Entry", href: "/sales", icon: "sales" }
 ];
 
 const secondaryModules: Array<{ label: string; icon: IconName }> = [
-  { label: "Land Ledger", icon: "land" },
-  { label: "Harvest Work Log", icon: "workflow" },
-  { label: "Vehicle Desk", icon: "vehicle" },
-  { label: "Sales Register", icon: "sales" },
   { label: "Expense Book", icon: "expense" },
   { label: "Reports", icon: "reports" }
 ];

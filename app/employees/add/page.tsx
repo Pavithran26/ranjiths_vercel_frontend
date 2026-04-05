@@ -19,11 +19,15 @@ const employeeTabs = [
 const initialForm: EmployeeFormValues = {
   employeeCode: "",
   fullName: "",
+  role: "worker",
   department: "",
   designation: "",
   email: "",
   phoneNumber: "",
-  joinedOn: ""
+  dailyWage: "0",
+  joinedOn: "",
+  isActive: "true",
+  notes: ""
 };
 
 export default function AddEmployeePage() {
@@ -53,7 +57,19 @@ export default function AddEmployeePage() {
     setFormError("");
 
     try {
-      await createEmployee(session.token, form);
+      await createEmployee(session.token, {
+        employeeCode: form.employeeCode,
+        fullName: form.fullName,
+        role: form.role,
+        department: form.department,
+        designation: form.designation,
+        email: form.email,
+        phoneNumber: form.phoneNumber,
+        dailyWage: Number(form.dailyWage),
+        joinedOn: form.joinedOn,
+        isActive: form.isActive === "true",
+        notes: form.notes
+      });
       startTransition(() => router.replace("/employees"));
     } catch (error) {
       setFormError(error instanceof Error ? error.message : "Unable to save employee");
@@ -70,7 +86,7 @@ export default function AddEmployeePage() {
     <AppShell
       active="employees"
       heading="Add Employee"
-      description="Create a clean master record for field staff before using them in attendance and future work logs."
+      description="Create a clean master record for field staff before using them in work logs, wages, and field supervision."
       userName={session.user.name}
       userRole={session.user.role}
       onLogout={handleLogout}
