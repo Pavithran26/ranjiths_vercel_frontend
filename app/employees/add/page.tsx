@@ -86,7 +86,7 @@ export default function AddEmployeePage() {
     <AppShell
       active="employees"
       heading="Add Employee"
-      description="Create a clean master record for field staff before using them in work logs, wages, and field supervision."
+      description="Register new field staff and workers."
       userName={session.user.name}
       userRole={session.user.role}
       onLogout={handleLogout}

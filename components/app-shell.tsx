@@ -1,10 +1,11 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 
 import { BrandLogo } from "./brand-logo";
 import { UiIcon, type IconName } from "./ui-icon";
+import { getStoredSession } from "../lib/session";
 
 type AppShellSection = "dashboard" | "lands" | "employees" | "vehicles" | "worklogs" | "sales" | "attendance";
 
@@ -28,11 +29,11 @@ type NavItem = {
 
 const primaryNav: NavItem[] = [
   { key: "dashboard", label: "Dashboard", href: "/dashboard", icon: "dashboard" },
-  { key: "lands", label: "Land Master", href: "/lands", icon: "land" },
-  { key: "employees", label: "Employee Master", href: "/employees", icon: "employee" },
-  { key: "vehicles", label: "Vehicle Master", href: "/vehicles", icon: "vehicle" },
-  { key: "worklogs", label: "Work Log Entry", href: "/worklogs", icon: "workflow" },
-  { key: "sales", label: "Sales Entry", href: "/sales", icon: "sales" }
+  { key: "lands", label: "Lands", href: "/lands", icon: "land" },
+  { key: "employees", label: "Employees", href: "/employees", icon: "employee" },
+  { key: "vehicles", label: "Vehicles", href: "/vehicles", icon: "vehicle" },
+  { key: "worklogs", label: "Work Logs", href: "/worklogs", icon: "workflow" },
+  { key: "sales", label: "Sales", href: "/sales", icon: "sales" }
 ];
 
 const secondaryModules: Array<{ label: string; icon: IconName }> = [
@@ -50,6 +51,16 @@ export function AppShell({
   onLogout,
   children
 }: AppShellProps) {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const session = getStoredSession();
+    if (session?.user.profileImage) {
+      setProfileImage(session.user.profileImage);
+    }
+  }, []);
+
   const todayLabel = new Intl.DateTimeFormat("en-IN", {
     day: "2-digit",
     month: "short",
@@ -57,7 +68,7 @@ export function AppShell({
   }).format(new Date());
 
   return (
-    <main className="workspace-shell">
+    <main className={`workspace-shell ${!isSidebarOpen ? "is-sidebar-collapsed" : ""}`}>
       <aside className="workspace-sidebar">
         <div className="sidebar-top">
           <BrandLogo />
@@ -70,6 +81,7 @@ export function AppShell({
                   key={item.key}
                   className={active === item.key ? "nav-link is-active" : "nav-link"}
                   href={item.href}
+                  onClick={() => setIsSidebarOpen(false)}
                 >
                   <span className="nav-icon">
                     <UiIcon height={18} name={item.icon} width={18} />
@@ -78,21 +90,6 @@ export function AppShell({
                 </Link>
               ))}
             </nav>
-          </div>
-
-          <div className="sidebar-group">
-            <p className="sidebar-label">Roadmap</p>
-            <div className="sidebar-stack">
-              {secondaryModules.map((item) => (
-                <div key={item.label} className="sidebar-item">
-                  <span className="nav-icon">
-                    <UiIcon height={18} name={item.icon} width={18} />
-                  </span>
-                  <span>{item.label}</span>
-                  <span className="sidebar-badge">Soon</span>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
 
@@ -116,9 +113,14 @@ export function AppShell({
       <section className="workspace-content">
         <header className="workspace-topbar">
           <div className="topbar-title">
-            <span className="topbar-icon">
+            <button 
+              className="icon-button topbar-menu-button" 
+              type="button" 
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              aria-label="Toggle menu"
+            >
               <UiIcon height={20} name="menu" width={20} />
-            </span>
+            </button>
             <div>
               <p className="eyebrow">Coconut operations</p>
               <h1>{heading}</h1>
@@ -130,13 +132,19 @@ export function AppShell({
             <button className="icon-button" type="button" aria-label="Notifications">
               <UiIcon height={18} name="bell" width={18} />
             </button>
-            <div className="profile-chip">
-              <span className="profile-avatar">{userName.slice(0, 1).toUpperCase()}</span>
+            <Link href="/profile" className="profile-chip" title="Edit Profile" style={{ textDecoration: "none" }}>
+              <span className="profile-avatar" style={{ overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                {profileImage ? (
+                  <img src={profileImage} alt="Avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                ) : (
+                  userName.slice(0, 1).toUpperCase()
+                )}
+              </span>
               <div>
                 <strong>{userName}</strong>
                 <span>{userRole}</span>
               </div>
-            </div>
+            </Link>
           </div>
         </header>
 

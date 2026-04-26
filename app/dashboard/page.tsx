@@ -5,8 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { AppShell } from "../../components/app-shell";
-import { ModuleGrid } from "../../components/module-grid";
 import { StatsCard } from "../../components/stats-card";
+import { FinancialOverview } from "../../components/financial-overview";
+import { LandProductionDonut } from "../../components/charts/land-production-donut";
+import { Leaderboard, type LeaderboardItem } from "../../components/leaderboard";
+import { QuickActions } from "../../components/quick-actions";
+
 import {
   getDashboardSummary,
   getEmployeeWorkReport,
@@ -34,42 +38,30 @@ const emptyProfit: ProfitLossReport = {
   monthlyBreakdown: []
 };
 
-const moduleItems = [
+const quickActionItems = [
   {
-    title: "Land Master",
-    description: "Track land owner details, gudhagai lease terms, acreage, and tree count.",
+    title: "Add Work Log",
+    description: "Capture daily harvest and worker assignments",
+    icon: "workflow" as const,
+    href: "/worklogs/new"
+  },
+  {
+    title: "Record Sales",
+    description: "Enter revenue from coconut buyers",
+    icon: "sales" as const,
+    href: "/sales/new"
+  },
+  {
+    title: "Manage Lands",
+    description: "View and update lease details",
     icon: "land" as const,
     href: "/lands"
   },
   {
-    title: "Employee Master",
-    description: "Store field workers, supervisors, departments, daily wages, and roles.",
+    title: "Employee Roster",
+    description: "Update worker statuses and roles",
     icon: "employee" as const,
     href: "/employees"
-  },
-  {
-    title: "Vehicle Master",
-    description: "Maintain truck details, driver contacts, capacity, and trip references.",
-    icon: "vehicle" as const,
-    href: "/vehicles"
-  },
-  {
-    title: "Work Log Entry",
-    description: "Capture the daily coconut harvest, assigned workers, GPS-ready fields, and vehicle use.",
-    icon: "workflow" as const,
-    href: "/worklogs"
-  },
-  {
-    title: "Sales Entry",
-    description: "Record buyer sales, price per coconut, transport cost, and overall revenue.",
-    icon: "sales" as const,
-    href: "/sales"
-  },
-  {
-    title: "Expense Book",
-    description: "Wages, transport, fuel, lease, maintenance, and future P&L tracking.",
-    icon: "expense" as const,
-    status: "planned" as const
   }
 ];
 
@@ -117,11 +109,20 @@ export default function DashboardPage() {
     return <main className="loading-screen">Checking your session...</main>;
   }
 
+
+
+  const topEmployees: LeaderboardItem[] = employeeReport.map((e) => ({
+    id: e.id,
+    name: e.name,
+    subtext: e.role,
+    metric: `${e.assignmentCount} logs`
+  }));
+
   return (
     <AppShell
       active="dashboard"
       heading="Coconut ERP Dashboard"
-      description="A production-style command view for leased lands, field workers, harvesting work logs, transport planning, and profit tracking."
+      description="Your operational command center for tracking lands, field workers, harvests, and profit metrics."
       userName={session.user.name}
       userRole={session.user.role}
       action={
@@ -131,6 +132,8 @@ export default function DashboardPage() {
       }
       onLogout={handleLogout}
     >
+      {pageError ? <p className="form-error">{pageError}</p> : null}
+
       <section className="stats-grid">
         <StatsCard helper="Leased lands currently active" icon="land" label="Total lands" value={String(summary.totalLands)} />
         <StatsCard helper="Workers available for assignment" icon="employee" label="Active workers" value={String(summary.activeWorkers)} />
@@ -139,71 +142,22 @@ export default function DashboardPage() {
       </section>
 
       <section className="content-grid dashboard-grid">
-        <article className="panel-card dashboard-primary">
-          <div className="panel-heading">
-            <div>
-              <p className="eyebrow">Business modules</p>
-              <h3>Core operational workspace</h3>
-              <p className="panel-description">
-                These modules match your real business flow: lease land, send workers, harvest coconuts, transport, sell, and measure profit.
-              </p>
-            </div>
+        <div style={{ display: "grid", gap: "18px" }}>
+          <FinancialOverview report={profitReport} />
+          <div className="dashboard-row">
+            <LandProductionDonut report={landReport} />
+            <Leaderboard 
+              title="Top Employees" 
+              icon="employee" 
+              items={topEmployees} 
+              emptyText="No employee assignment data available." 
+            />
           </div>
+        </div>
 
-          {pageError ? <p className="form-error">{pageError}</p> : null}
-
-          <ModuleGrid items={moduleItems} />
-        </article>
-
-        <article className="panel-card dashboard-flow">
-          <div className="panel-heading">
-            <div>
-              <p className="eyebrow">Live reports</p>
-              <h3>What the backend is already calculating</h3>
-            </div>
-          </div>
-
-          <div className="flow-list">
-            <div className="flow-list-item">
-              <span className="flow-item-icon">1</span>
-              <div>
-                <strong>Top land production</strong>
-                <p>
-                  {landReport[0]
-                    ? `${landReport[0].name} leads with ${landReport[0].totalCoconuts} coconuts across ${landReport[0].totalWorkLogs} work logs.`
-                    : "Land-wise production report will appear as soon as work logs are recorded."}
-                </p>
-              </div>
-            </div>
-            <div className="flow-list-item">
-              <span className="flow-item-icon">2</span>
-              <div>
-                <strong>Employee work report</strong>
-                <p>
-                  {employeeReport[0]
-                    ? `${employeeReport[0].name} currently has ${employeeReport[0].assignmentCount} work assignments in the report.`
-                    : "Employee assignment analytics will appear after work logs are saved."}
-                </p>
-              </div>
-            </div>
-            <div className="flow-list-item">
-              <span className="flow-item-icon">3</span>
-              <div>
-                <strong>Profit and loss</strong>
-                <p>
-                  Revenue Rs {profitReport.totalRevenue.toFixed(0)} against expenses Rs {profitReport.totalExpenses.toFixed(0)} gives a current profit of Rs {profitReport.totalProfit.toFixed(0)}.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="dashboard-note">
-            <strong>Architecture upgrade</strong>
-            <p>
-              This dashboard now reads from the modular DRF `v1` API with JWT auth, role-ready users, and PostgreSQL-friendly business entities.
-            </p>
-          </div>
-        </article>
+        <div style={{ display: "grid", gap: "18px", alignContent: "start" }}>
+          <QuickActions items={quickActionItems} />
+        </div>
       </section>
     </AppShell>
   );

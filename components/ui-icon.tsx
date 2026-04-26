@@ -12,7 +12,8 @@ export type IconName =
   | "workflow"
   | "logout"
   | "bell"
-  | "menu";
+  | "menu"
+  | "delete";
 
 type UiIconProps = SVGProps<SVGSVGElement> & {
   name: IconName;
@@ -131,6 +132,16 @@ export function UiIcon({ name, className, ...props }: UiIconProps) {
           <path d="M4.5 7h15" />
           <path d="M4.5 12h15" />
           <path d="M4.5 17h15" />
+        </>
+      ) : null}
+
+      {name === "delete" ? (
+        <>
+          <path d="M4 7h16" />
+          <path d="M10 11v6" />
+          <path d="M14 11v6" />
+          <path d="M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2l1-12" />
+          <path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3" />
         </>
       ) : null}
     </svg>

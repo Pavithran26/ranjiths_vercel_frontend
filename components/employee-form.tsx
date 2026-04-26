@@ -43,27 +43,6 @@ export function EmployeeForm({
         <div>
           <p className="eyebrow">{eyebrow}</p>
           <h3>{title}</h3>
-          <p className="panel-description">
-            These employee details will be reused in work logs, wages, supervisor assignment, and reports as the ERP grows.
-          </p>
-        </div>
-      </div>
-
-      <div className="insight-strip form-insight-strip">
-        <div className="insight-card">
-          <span>Master data</span>
-          <strong>Clean</strong>
-          <p>Store one correct record per worker</p>
-        </div>
-        <div className="insight-card">
-          <span>Work log link</span>
-          <strong>Ready</strong>
-          <p>Saved employees appear in the work log assignment flow</p>
-        </div>
-        <div className="insight-card">
-          <span>Future modules</span>
-          <strong>Expandable</strong>
-          <p>Wages, work logs, and reports can build on this</p>
         </div>
       </div>
 

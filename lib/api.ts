@@ -8,6 +8,7 @@ export type AuthUser = {
   phoneNumber?: string;
   designation?: string;
   preferredLanguage?: string;
+  profileImage?: string;
   isActive?: boolean;
 };
 
@@ -47,6 +48,17 @@ export type Land = {
   treeCount: number;
   leaseNotes: string;
   isActive: boolean;
+  totalPaid: number;
+  balanceDue: number;
+};
+
+export type LandLeasePayment = {
+  id: string;
+  landId: string;
+  paymentDate: string;
+  amount: number;
+  paymentType: "advance" | "emi" | "other";
+  notes: string;
 };
 
 export type Employee = {
@@ -195,7 +207,7 @@ type LegacyEnvelope<T> = {
 const configuredBase =
   process.env.NEXT_PUBLIC_API_BASE_URL ??
   (process.env.NODE_ENV === "development"
-    ? "http://localhost:4000/api"
+    ? "http://127.0.0.1:8000/api"
     : "https://source-backend-django.vercel.app/api");
 
 const legacyApiBaseUrl = configuredBase.endsWith("/api/v1") ? configuredBase.replace(/\/v1$/, "") : configuredBase;
@@ -272,8 +284,20 @@ async function request<T>(path: string, init?: RequestInit, token?: string, useL
   return payload as T;
 }
 
-async function listRequest<T>(path: string, token: string): Promise<T[]> {
-  const payload = await request<PaginatedResponse<T> | T[]>(path, undefined, token);
+async function listRequest<T>(path: string, token: string, params?: Record<string, string | number>): Promise<T[]> {
+  let urlPath = path;
+  if (params) {
+    const searchParams = new URLSearchParams();
+    for (const [key, value] of Object.entries(params)) {
+      if (value) searchParams.append(key, String(value));
+    }
+    const query = searchParams.toString();
+    if (query) {
+      urlPath += urlPath.includes("?") ? `&${query}` : `?${query}`;
+    }
+  }
+
+  const payload = await request<PaginatedResponse<T> | T[]>(urlPath, undefined, token);
   if (Array.isArray(payload)) {
     return payload;
   }
@@ -310,6 +334,7 @@ function mapAuthUser(item: Record<string, unknown>): AuthUser {
     phoneNumber: String(item.phoneNumber ?? item.phone_number ?? ""),
     designation: String(item.designation ?? ""),
     preferredLanguage: String(item.preferredLanguage ?? item.preferred_language ?? ""),
+    profileImage: item.profileImage ? String(item.profileImage) : undefined,
     isActive: Boolean(item.isActive ?? item.is_active ?? true)
   };
 }
@@ -338,7 +363,20 @@ function mapLand(item: Record<string, unknown>): Land {
     leaseAmount: Number(item.lease_amount ?? 0),
     treeCount: Number(item.tree_count ?? 0),
     leaseNotes: String(item.lease_notes ?? ""),
-    isActive: Boolean(item.is_active ?? true)
+    isActive: Boolean(item.is_active ?? true),
+    totalPaid: Number(item.total_paid ?? 0),
+    balanceDue: Number(item.balance_due ?? 0)
+  };
+}
+
+function mapLandLeasePayment(item: Record<string, unknown>): LandLeasePayment {
+  return {
+    id: String(item.id ?? ""),
+    landId: String(item.land_id ?? ""),
+    paymentDate: String(item.payment_date ?? ""),
+    amount: Number(item.amount ?? 0),
+    paymentType: (item.payment_type as "advance" | "emi" | "other") ?? "emi",
+    notes: String(item.notes ?? "")
   };
 }
 
@@ -471,6 +509,11 @@ export const getProfitLossReport = (token: string) =>
 export const getLandOwners = async (token: string) =>
   (await listRequest<Record<string, unknown>>("/land-owners", token)).map(mapLandOwner);
 
+export const getLand = async (token: string, id: string) => {
+  const payload = await request<Record<string, unknown>>(`/lands/${id}`, undefined, token);
+  return mapLand(payload);
+};
+
 export const createLandOwner = async (
   token: string,
   input: Omit<LandOwner, "id">
@@ -491,8 +534,8 @@ export const createLandOwner = async (
   return mapLandOwner(payload);
 };
 
-export const getLands = async (token: string) =>
-  (await listRequest<Record<string, unknown>>("/lands", token)).map(mapLand);
+export const getLands = async (token: string, params?: Record<string, string | number>) =>
+  (await listRequest<Record<string, unknown>>("/lands", token, params)).map(mapLand);
 
 export const createLand = async (
   token: string,
@@ -520,8 +563,8 @@ export const createLand = async (
   return mapLand(payload);
 };
 
-export const getEmployees = async (token: string) =>
-  (await listRequest<Record<string, unknown>>("/employees", token)).map(mapEmployee);
+export const getEmployees = async (token: string, params?: Record<string, string | number>) =>
+  (await listRequest<Record<string, unknown>>("/employees", token, params)).map(mapEmployee);
 
 export const createEmployee = async (
   token: string,
@@ -581,15 +624,84 @@ export const updateEmployee = async (token: string, id: string, input: Omit<Empl
 
 export const deleteEmployee = (token: string, id: string) =>
   request<{ id: string }>(
-    `/employees/${id}`,
+    `/employees/${id}/`,
     {
       method: "DELETE"
     },
     token
   );
 
-export const getVehicles = async (token: string) =>
-  (await listRequest<Record<string, unknown>>("/vehicles", token)).map(mapVehicle);
+export const deleteLand = (token: string, id: string) =>
+  request<{ id: string }>(
+    `/lands/${id}/`,
+    {
+      method: "DELETE"
+    },
+    token
+  );
+
+export const getLandPayments = async (token: string, params?: Record<string, string | number>) =>
+  (await listRequest<Record<string, unknown>>("/land-payments", token, params)).map(mapLandLeasePayment);
+
+export const createLandPayment = async (
+  token: string,
+  input: Omit<LandLeasePayment, "id">
+) => {
+  const payload = await request<Record<string, unknown>>(
+    "/land-payments",
+    {
+      method: "POST",
+      body: JSON.stringify({
+        land_id: input.landId,
+        payment_date: input.paymentDate,
+        amount: input.amount,
+        payment_type: input.paymentType,
+        notes: input.notes
+      })
+    },
+    token
+  );
+  return mapLandLeasePayment(payload);
+};
+
+export const deleteLandPayment = (token: string, id: string) =>
+  request<{ id: string }>(
+    `/land-payments/${id}/`,
+    {
+      method: "DELETE"
+    },
+    token
+  );
+
+export const deleteVehicle = (token: string, id: string) =>
+  request<{ id: string }>(
+    `/vehicles/${id}/`,
+    {
+      method: "DELETE"
+    },
+    token
+  );
+
+export const deleteWorkLog = (token: string, id: string) =>
+  request<{ id: string }>(
+    `/worklogs/${id}/`,
+    {
+      method: "DELETE"
+    },
+    token
+  );
+
+export const deleteSalesEntry = (token: string, id: string) =>
+  request<{ id: string }>(
+    `/sales/${id}/`,
+    {
+      method: "DELETE"
+    },
+    token
+  );
+
+export const getVehicles = async (token: string, params?: Record<string, string | number>) =>
+  (await listRequest<Record<string, unknown>>("/vehicles", token, params)).map(mapVehicle);
 
 export const createVehicle = async (
   token: string,
@@ -614,8 +726,8 @@ export const createVehicle = async (
   return mapVehicle(payload);
 };
 
-export const getWorkLogs = async (token: string) =>
-  (await listRequest<Record<string, unknown>>("/worklogs", token)).map(mapWorkLog);
+export const getWorkLogs = async (token: string, params?: Record<string, string | number>) =>
+  (await listRequest<Record<string, unknown>>("/worklogs", token, params)).map(mapWorkLog);
 
 export const createWorkLog = async (
   token: string,
@@ -677,8 +789,8 @@ export const createBuyer = async (
   return mapBuyer(payload);
 };
 
-export const getSalesEntries = async (token: string) =>
-  (await listRequest<Record<string, unknown>>("/sales", token)).map(mapSalesEntry);
+export const getSalesEntries = async (token: string, params?: Record<string, string | number>) =>
+  (await listRequest<Record<string, unknown>>("/sales", token, params)).map(mapSalesEntry);
 
 export const createSalesEntry = async (
   token: string,
@@ -741,3 +853,20 @@ export const createAttendance = (
     token,
     true
   );
+
+export const updateProfile = async (token: string, data: { username?: string; password?: string; profileImage?: File }) => {
+  const formData = new FormData();
+  if (data.username) formData.append("username", data.username);
+  if (data.password) formData.append("password", data.password);
+  if (data.profileImage) formData.append("profile_image", data.profileImage);
+
+  const payload = await request<Record<string, unknown>>(
+    "/auth/me",
+    {
+      method: "PATCH",
+      body: formData
+    },
+    token
+  );
+  return mapAuthUser(payload);
+};

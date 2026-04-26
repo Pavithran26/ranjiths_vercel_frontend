@@ -2,36 +2,36 @@
 
 import { startTransition, useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 import { AppShell } from "../../components/app-shell";
 import { EmptyState } from "../../components/empty-state";
 import { SectionTabs } from "../../components/section-tabs";
-import { createVehicle, getVehicles, type Vehicle } from "../../lib/api";
+import { getVehicles, deleteVehicle, type Vehicle } from "../../lib/api";
 import { clearStoredSession } from "../../lib/session";
+import { ListControls } from "../../components/list-controls";
+import { useListFilters } from "../../lib/use-list-filters";
 import { useProtectedSession } from "../../lib/use-protected-session";
+import { ConfirmModal } from "../../components/confirm-modal";
+import { DataTable, type ColumnDef } from "../../components/data-table";
+import { FaEdit, FaTrash } from "react-icons/fa";
 
 const tabs = [
   { href: "/dashboard", label: "Dashboard" },
-  { href: "/vehicles", label: "Vehicle master" }
+  { href: "/vehicles", label: "Vehicle List" },
+  { href: "/vehicles/add", label: "Add Vehicle" }
 ];
 
-const initialVehicleForm = {
-  registrationNumber: "",
-  vehicleType: "",
-  capacity: "0",
-  driverName: "",
-  driverPhone: "",
-  isActive: true,
-  notes: ""
-};
+
 
 export default function VehiclesPage() {
   const router = useRouter();
   const { loading, session } = useProtectedSession();
+  const { pageSize, startDate, endDate, setPageSize, setStartDate, setEndDate, appliedParams, handleApply, handleClear } = useListFilters();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [form, setForm] = useState(initialVehicleForm);
   const [pageError, setPageError] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState("");
+  const [vehicleToDelete, setVehicleToDelete] = useState<Vehicle | null>(null);
 
   useEffect(() => {
     if (!session) {
@@ -40,45 +40,43 @@ export default function VehiclesPage() {
 
     const loadVehicles = async () => {
       try {
-        setVehicles(await getVehicles(session.token));
+        const params: Record<string, string | number> = {};
+        if (appliedParams.pageSize === "all") {
+          params.page_size = 10000;
+        } else {
+          params.page_size = appliedParams.pageSize;
+        }
+        if (appliedParams.startDate) params.created_at__gte = appliedParams.startDate;
+        if (appliedParams.endDate) params.created_at__lte = appliedParams.endDate;
+
+        setVehicles(await getVehicles(session.token, params));
       } catch (error) {
         setPageError(error instanceof Error ? error.message : "Unable to load vehicles");
       }
     };
 
     void loadVehicles();
-  }, [session]);
+  }, [session, appliedParams]);
 
   const handleLogout = () => {
     clearStoredSession();
     startTransition(() => router.replace("/"));
   };
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!session) {
-      return;
-    }
+  const confirmDelete = async () => {
+    if (!session || !vehicleToDelete) return;
 
-    setSaving(true);
+    setDeletingId(vehicleToDelete.id);
     setPageError("");
 
     try {
-      const vehicle = await createVehicle(session.token, {
-        registrationNumber: form.registrationNumber,
-        vehicleType: form.vehicleType,
-        capacity: Number(form.capacity),
-        driverName: form.driverName,
-        driverPhone: form.driverPhone,
-        isActive: form.isActive,
-        notes: form.notes
-      });
-      setVehicles((current) => [vehicle, ...current]);
-      setForm(initialVehicleForm);
+      await deleteVehicle(session.token, vehicleToDelete.id);
+      setVehicles((current) => current.filter((item) => item.id !== vehicleToDelete.id));
     } catch (error) {
-      setPageError(error instanceof Error ? error.message : "Unable to save vehicle");
+      setPageError(error instanceof Error ? error.message : "Unable to delete vehicle");
     } finally {
-      setSaving(false);
+      setDeletingId("");
+      setVehicleToDelete(null);
     }
   };
 
@@ -89,12 +87,19 @@ export default function VehiclesPage() {
   return (
     <AppShell
       active="vehicles"
-      heading="Vehicle Master"
+      heading="Vehicle List"
       description="Maintain transport vehicles, capacity, and driver details for harvest movement."
       userName={session.user.name}
       userRole={session.user.role}
       onLogout={handleLogout}
     >
+      <ConfirmModal
+        isOpen={!!vehicleToDelete}
+        title="Delete Vehicle"
+        message={`Are you sure you want to delete vehicle ${vehicleToDelete?.registrationNumber}? This action cannot be undone.`}
+        onConfirm={confirmDelete}
+        onCancel={() => setVehicleToDelete(null)}
+      />
       <SectionTabs tabs={tabs} />
 
       <article className="panel-card">
@@ -123,73 +128,77 @@ export default function VehiclesPage() {
 
         {pageError ? <p className="form-error">{pageError}</p> : null}
 
-        <form className="data-form two-column-form" onSubmit={handleSubmit}>
-          <label>
-            <span>Registration number</span>
-            <input value={form.registrationNumber} onChange={(event) => setForm((current) => ({ ...current, registrationNumber: event.target.value }))} required />
-          </label>
-          <label>
-            <span>Vehicle type</span>
-            <input value={form.vehicleType} onChange={(event) => setForm((current) => ({ ...current, vehicleType: event.target.value }))} required />
-          </label>
-          <label>
-            <span>Capacity</span>
-            <input type="number" min="0" step="0.01" value={form.capacity} onChange={(event) => setForm((current) => ({ ...current, capacity: event.target.value }))} required />
-          </label>
-          <label>
-            <span>Driver name</span>
-            <input value={form.driverName} onChange={(event) => setForm((current) => ({ ...current, driverName: event.target.value }))} />
-          </label>
-          <label>
-            <span>Driver phone</span>
-            <input value={form.driverPhone} onChange={(event) => setForm((current) => ({ ...current, driverPhone: event.target.value }))} />
-          </label>
-          <label className="form-span-two">
-            <span>Notes</span>
-            <textarea rows={4} value={form.notes} onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))} />
-          </label>
-          <button className="primary-button form-span-two" type="submit" disabled={saving}>
-            {saving ? "Saving vehicle..." : "Save vehicle"}
-          </button>
-        </form>
 
-        {vehicles.length === 0 ? (
-          <div className="empty-state-stack">
-            <EmptyState
-              title="No vehicles registered yet"
-              description="Add the first transport vehicle so work logs and dispatch records can start linking to it."
-            />
-          </div>
-        ) : (
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Vehicle</th>
-                  <th>Type</th>
-                  <th>Driver</th>
-                  <th>Capacity</th>
-                </tr>
-              </thead>
-              <tbody>
-                {vehicles.map((vehicle) => (
-                  <tr key={vehicle.id}>
-                    <td>
-                      <strong>{vehicle.registrationNumber}</strong>
-                      <span>{vehicle.notes || "Transport master record"}</span>
-                    </td>
-                    <td>{vehicle.vehicleType}</td>
-                    <td>
-                      <strong>{vehicle.driverName || "Not assigned"}</strong>
-                      <span>{vehicle.driverPhone}</span>
-                    </td>
-                    <td>{vehicle.capacity}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+
+        <div style={{ marginTop: "2rem" }}>
+          <ListControls
+            pageSize={pageSize}
+            startDate={startDate}
+            endDate={endDate}
+            onPageSizeChange={setPageSize}
+            onStartDateChange={setStartDate}
+            onEndDateChange={setEndDate}
+            onFilterApply={handleApply}
+            onFilterClear={handleClear}
+          />
+        </div>
+
+        <DataTable
+          columns={[
+            {
+              header: "Vehicle",
+              render: (vehicle) => (
+                <>
+                  <strong>{vehicle.registrationNumber}</strong>
+                  <span>{vehicle.notes || "Transport master record"}</span>
+                </>
+              )
+            },
+            { header: "Type", accessor: "vehicleType" },
+            {
+              header: "Driver",
+              render: (vehicle) => (
+                <>
+                  <strong>{vehicle.driverName || "Not assigned"}</strong>
+                  <span>{vehicle.driverPhone}</span>
+                </>
+              )
+            },
+            { header: "Capacity", accessor: "capacity" },
+            {
+              header: "Actions",
+              render: (vehicle) => (
+                <div className="table-actions">
+                  <button className="secondary-button table-button" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0.5rem" }}>
+                    <FaEdit size={16} />
+                  </button>
+                  <button
+                    className="danger-button table-button"
+                    type="button"
+                    disabled={deletingId === vehicle.id}
+                    onClick={() => setVehicleToDelete(vehicle)}
+                    style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", padding: "0.5rem" }}
+                  >
+                    {deletingId === vehicle.id ? "..." : <FaTrash size={16} />}
+                  </button>
+                </div>
+              )
+            }
+          ]}
+          data={vehicles}
+          keyExtractor={(item) => item.id}
+          emptyState={
+            <div className="empty-state-stack">
+              <EmptyState
+                title="No vehicles registered yet"
+                description="Add the first transport vehicle so work logs and dispatch records can start linking to it."
+              />
+              <Link className="secondary-button" href="/vehicles/add">
+                Go to add vehicle
+              </Link>
+            </div>
+          }
+        />
       </article>
     </AppShell>
   );
