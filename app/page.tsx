@@ -9,7 +9,7 @@ import { getStoredSession, isSessionExpired, setStoredSession } from "../lib/ses
 
 export default function LoginPage() {
   const router = useRouter();
-  const [username, setUsername] = useState("Pavithran26");
+  const [username, setUsername] = useState("Hello");
   const [password, setPassword] = useState("@Pavi4624");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
