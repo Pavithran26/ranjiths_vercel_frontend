@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { db } from "../lib/firebaseConfig";
+import { db } from "@/lib/firebaseClient";
 import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
 
 interface WorkLogUpdate {
