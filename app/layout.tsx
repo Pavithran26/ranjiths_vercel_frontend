@@ -17,7 +17,14 @@ const displayFont = Cormorant_Garamond({
 
 export const metadata = {
   title: "SRK Coconut ERP",
-  description: "Operations dashboard for coconut harvesting and trading"
+  description: "Operations dashboard for coconut harvesting and trading",
+  manifest: "/manifest.json",
+  themeColor: "#0F172A",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "SRK ERP",
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
