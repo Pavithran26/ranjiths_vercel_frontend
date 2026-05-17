@@ -48,9 +48,9 @@ export default function LoginPage() {
         <div className="login-header">
           <p className="eyebrow">Business workspace</p>
           <h1>Sign in to continue</h1>
-          <p>
+          {/* <p>
             Use the same secure access for web operations today and Flutter mobile workflows later.
-          </p>
+          </p> */}
         </div>
 
         <form className="data-form" onSubmit={handleSubmit}>
@@ -76,6 +76,14 @@ export default function LoginPage() {
           </button>
         </form>
       </section>
+      <footer className="workspace-footer" style={{ width: "100%", marginTop: "1.5rem" }}>
+        <p>
+          This Software is Developed and Managed by{" "}
+          <a href="https://github.com/Pavithran26" target="_blank" rel="noopener noreferrer">
+            Pavithran S
+          </a>
+        </p>
+      </footer>
     </main>
   );
 }
