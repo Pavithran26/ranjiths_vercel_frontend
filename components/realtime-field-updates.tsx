@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { db } from "@/lib/firebaseClient";
+import { db, ensureFirebaseInitialized } from "@/lib/firebaseClient";
 import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
 
 interface WorkLogUpdate {
@@ -17,8 +17,10 @@ export function RealtimeFieldUpdates() {
   const [error, setError] = useState(false);
 
   useEffect(() => {
+    ensureFirebaseInitialized();
+
     // Check if Firestore is likely configured
-    if (!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
+    if (!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || !db) {
         return;
     }
 
