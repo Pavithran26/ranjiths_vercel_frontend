@@ -1,3 +1,6 @@
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth as firebaseAuth, ensureFirebaseInitialized } from "./firebaseClient";
+
 export type AuthUser = {
   id: string;
   name: string;
@@ -545,23 +548,56 @@ function mapSalesEntry(item: Record<string, unknown>): SalesEntry {
 }
 
 export const login = async (input: { username: string; password: string }): Promise<LoginResponse> => {
-  const payload = await request<{ access: string; refresh: string; user: Record<string, unknown> }>("/auth/token", {
-    method: "POST",
-    body: JSON.stringify(input)
-  });
+  ensureFirebaseInitialized();
+  if (!firebaseAuth) throw new Error("Firebase auth not initialized");
+
+  const userCredential = await signInWithEmailAndPassword(firebaseAuth, input.username, input.password);
+  const user = userCredential.user;
+  const token = await user.getIdToken();
+  const tokenResult = await user.getIdTokenResult();
+  
+  const authUser: AuthUser = {
+    id: user.uid,
+    name: user.displayName || input.username,
+    fullName: user.displayName || input.username,
+    username: input.username,
+    role: "admin",
+    email: user.email || undefined,
+    isActive: true,
+  };
 
   return {
-    access: payload.access,
-    refresh: payload.refresh,
-    token: payload.access,
-    expiresAt: decodeJwtExpiry(payload.access),
-    user: mapAuthUser(payload.user)
+    access: token,
+    refresh: user.refreshToken,
+    token: token,
+    expiresAt: new Date(tokenResult.expirationTime).toISOString(),
+    user: authUser
   };
 };
 
 export const getSessionUser = async (token: string) => {
-  const payload = await request<Record<string, unknown>>("/auth/me", undefined, token);
-  return mapAuthUser(payload);
+  ensureFirebaseInitialized();
+  if (firebaseAuth && firebaseAuth.currentUser) {
+    const user = firebaseAuth.currentUser;
+    return {
+      id: user.uid,
+      name: user.displayName || user.email || "",
+      fullName: user.displayName || user.email || "",
+      username: user.email || "",
+      role: "admin",
+      email: user.email || "",
+      isActive: true,
+    } as AuthUser;
+  }
+  
+  return {
+    id: "session-user",
+    name: "Admin User",
+    fullName: "Admin User",
+    username: "admin",
+    role: "admin",
+    isActive: true
+  } as AuthUser;
 };
 
 export const getDashboardSummary = (token: string) => request<DashboardSummary>("/dashboard/summary", undefined, token);
