@@ -677,6 +677,36 @@ export const createLand = async (
   return mapLand(payload);
 };
 
+export const updateLand = async (
+  token: string,
+  id: string,
+  input: Omit<Land, "id" | "ownerName" | "totalPaid" | "balanceDue">
+) => {
+  const payload = await request<Record<string, unknown>>(
+    `/lands/${id}`,
+    {
+      method: "PUT",
+      body: JSON.stringify({
+        owner_id: input.ownerId,
+        name: input.name,
+        village: input.village,
+        area_acres: input.areaAcres,
+        lease_start_date: input.leaseStartDate,
+        lease_end_date: input.leaseEndDate,
+        lease_amount: input.leaseAmount,
+        tree_count: input.treeCount,
+        lease_notes: input.leaseNotes,
+        is_active: input.isActive,
+        latitude: input.latitude ?? null,
+        longitude: input.longitude ?? null,
+        location: input.location ?? null
+      })
+    },
+    token
+  );
+  return mapLand(payload);
+};
+
 export const getEmployees = async (token: string, params?: Record<string, string | number>) =>
   (await listRequest<Record<string, unknown>>("/employees", token, params)).map(mapEmployee);
 
@@ -825,6 +855,35 @@ export const createVehicle = async (
     "/vehicles",
     {
       method: "POST",
+      body: JSON.stringify({
+        registration_number: input.registrationNumber,
+        vehicle_type: input.vehicleType,
+        capacity: input.capacity,
+        driver_name: input.driverName,
+        driver_phone: input.driverPhone,
+        is_active: input.isActive,
+        notes: input.notes
+      })
+    },
+    token
+  );
+  return mapVehicle(payload);
+};
+
+export const getVehicle = async (token: string, id: string) => {
+  const payload = await request<Record<string, unknown>>(`/vehicles/${id}`, undefined, token);
+  return mapVehicle(payload);
+};
+
+export const updateVehicle = async (
+  token: string,
+  id: string,
+  input: Omit<Vehicle, "id">
+) => {
+  const payload = await request<Record<string, unknown>>(
+    `/vehicles/${id}`,
+    {
+      method: "PUT",
       body: JSON.stringify({
         registration_number: input.registrationNumber,
         vehicle_type: input.vehicleType,
