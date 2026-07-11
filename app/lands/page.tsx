@@ -172,7 +172,15 @@ export default function LandsPage() {
               )
             },
             { header: "Owner", accessor: "ownerName" },
-            { header: "Village", accessor: "village" },
+            {
+              header: "Village & Location",
+              render: (land) => (
+                <>
+                  <strong>{land.village}</strong>
+                  {land.location && <span style={{ fontSize: "0.85em", color: "#64748b" }}>{land.location}</span>}
+                </>
+              )
+            },
             {
               header: "Financials",
               render: (land) => (

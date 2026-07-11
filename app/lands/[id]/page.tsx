@@ -124,7 +124,11 @@ export default function LandLedgerPage({ params }: { params: Promise<{ id: strin
     <AppShell
       active="lands"
       heading={`Land Ledger: ${land.name}`}
-      description={`Track lease payments, advance, and EMI installments for ${land.ownerName}.`}
+      description={`Track lease payments, advance, and EMI installments for ${land.ownerName}.${
+        land.location ? ` Location: ${land.location}.` : ""
+      }${
+        land.latitude != null && land.longitude != null ? ` Coordinates: ${land.latitude}, ${land.longitude}.` : ""
+      }`}
       userName={session.user.name}
       userRole={session.user.role}
       onLogout={handleLogout}

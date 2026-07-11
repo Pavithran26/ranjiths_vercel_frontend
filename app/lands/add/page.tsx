@@ -37,7 +37,10 @@ const initialLandForm = {
   leaseAmount: "0",
   treeCount: "0",
   leaseNotes: "",
-  isActive: true
+  isActive: true,
+  latitude: "",
+  longitude: "",
+  location: ""
 };
 
 export default function AddLandPage() {
@@ -100,7 +103,10 @@ export default function AddLandPage() {
         leaseAmount: Number(landForm.leaseAmount),
         treeCount: Number(landForm.treeCount),
         leaseNotes: landForm.leaseNotes,
-        isActive: landForm.isActive
+        isActive: landForm.isActive,
+        latitude: landForm.latitude ? Number(landForm.latitude) : null,
+        longitude: landForm.longitude ? Number(landForm.longitude) : null,
+        location: landForm.location || null
       });
       router.push("/lands");
     } catch (error) {
@@ -207,6 +213,18 @@ export default function AddLandPage() {
             <label className="form-span-two">
               <span>Lease notes</span>
               <textarea rows={4} value={landForm.leaseNotes} onChange={(event) => setLandForm((current) => ({ ...current, leaseNotes: event.target.value }))} />
+            </label>
+            <label className="form-span-two">
+              <span>Location Description</span>
+              <input value={landForm.location} onChange={(event) => setLandForm((current) => ({ ...current, location: event.target.value }))} placeholder="E.g., North Field, near main road" />
+            </label>
+            <label>
+              <span>Latitude</span>
+              <input type="number" min="-90" max="90" step="0.000001" value={landForm.latitude} onChange={(event) => setLandForm((current) => ({ ...current, latitude: event.target.value }))} placeholder="E.g., 11.012345" />
+            </label>
+            <label>
+              <span>Longitude</span>
+              <input type="number" min="-180" max="180" step="0.000001" value={landForm.longitude} onChange={(event) => setLandForm((current) => ({ ...current, longitude: event.target.value }))} placeholder="E.g., 77.012345" />
             </label>
             <button className="primary-button form-span-two" type="submit" disabled={savingLand}>
               {savingLand ? "Saving land..." : "Save land"}

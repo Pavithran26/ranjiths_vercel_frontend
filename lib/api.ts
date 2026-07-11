@@ -53,6 +53,9 @@ export type Land = {
   isActive: boolean;
   totalPaid: number;
   balanceDue: number;
+  latitude?: number | null;
+  longitude?: number | null;
+  location?: string | null;
 };
 
 export type LandLeasePayment = {
@@ -405,7 +408,10 @@ function mapLand(item: Record<string, unknown>): Land {
     leaseNotes: String(item.lease_notes ?? ""),
     isActive: Boolean(item.is_active ?? true),
     totalPaid: Number(item.total_paid ?? 0),
-    balanceDue: Number(item.balance_due ?? 0)
+    balanceDue: Number(item.balance_due ?? 0),
+    latitude: item.latitude == null ? null : Number(item.latitude),
+    longitude: item.longitude == null ? null : Number(item.longitude),
+    location: item.location ? String(item.location) : null,
   };
 }
 
@@ -660,7 +666,10 @@ export const createLand = async (
         lease_amount: input.leaseAmount,
         tree_count: input.treeCount,
         lease_notes: input.leaseNotes,
-        is_active: input.isActive
+        is_active: input.isActive,
+        latitude: input.latitude ?? null,
+        longitude: input.longitude ?? null,
+        location: input.location ?? null
       })
     },
     token
