@@ -70,6 +70,16 @@ export default function AddWorkLogPage() {
     void loadData();
   }, [session]);
 
+  useEffect(() => {
+    if (typeof window !== "undefined" && lands.length > 0) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const queryLandId = urlParams.get("landId");
+      if (queryLandId && lands.some((l) => l.id === queryLandId)) {
+        setForm((current) => ({ ...current, landId: queryLandId }));
+      }
+    }
+  }, [lands]);
+
   const handleLogout = () => {
     clearStoredSession();
     startTransition(() => router.replace("/"));

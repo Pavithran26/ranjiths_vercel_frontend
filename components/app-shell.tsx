@@ -7,6 +7,7 @@ import { BrandLogo } from "./brand-logo";
 import { ThemeToggle } from "./theme-toggle";
 import { UiIcon, type IconName } from "./ui-icon";
 import { getStoredSession } from "@/lib/session";
+import { NotificationBell } from "./notification-bell";
 
 type AppShellSection = "dashboard" | "lands" | "employees" | "vehicles" | "worklogs" | "sales" | "attendance" | "stores" | "grns";
 
@@ -134,9 +135,7 @@ export function AppShell({
           <div className="topbar-tools">
             <ThemeToggle />
             <div className="topbar-date">{todayLabel}</div>
-            <button className="icon-button" type="button" aria-label="Notifications">
-              <UiIcon height={18} name="bell" width={18} />
-            </button>
+            <NotificationBell />
             <Link href="/profile" className="profile-chip" title="Edit Profile" style={{ textDecoration: "none" }}>
               <span className="profile-avatar" style={{ overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
                 {profileImage ? (
